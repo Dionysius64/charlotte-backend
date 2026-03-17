@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-counter = 0
-emotion = 0
+from pydantic import BaseModel
+from state import add_message, get_messages_since
 
 app = FastAPI()
 
@@ -13,22 +12,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/conversation_title")
-def get_title():
-    return {"conversation_title": "Conversation"}
+# -------- Models --------
 
-@app.get("/next_message")
-def next_message():
+class MessageIn(BaseModel):
+    author: str
+    message: str
+    timestamp: str | None = None
+    emotion: int = 0
 
-    global counter
-    counter += 1
+# -------- Endpoints --------
 
-    return {
-        "message": f"{counter}",
-        "author": "Backend"
-    }
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
-@app.get("/avatar")
-def get_avatar():
-    global counter
-    return {"avatar_index": counter%7}
+
+@app.post("/send_message")
+def send_message(msg: MessageIn):
+    stored = add_message(msg.author, msg.message, msg.emotion)
+    return stored
+
+
+@app.get("/messages")
+def get_messages(last_timestamp: str | None = None):
+    msgs = get_messages_since(last_timestamp)
+    return {"messages": msgs}
