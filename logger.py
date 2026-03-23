@@ -2,7 +2,11 @@ import logging
 
 def setup_logger():
     logger = logging.getLogger("chat_app")
-    logger.setLevel(logging.DEBUG)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s"
+    )
 
     ch = logging.StreamHandler()
     formatter = logging.Formatter(
